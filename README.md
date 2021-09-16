@@ -1,0 +1,1 @@
+This is a simple HTML wrapper around the BeautifulNews RSS Feed. It currently uses a development proxy to bypass Feedburner's CORS issue. Because of that, it is not suitable for long-term use and is not published to the WP Engine Workshop.

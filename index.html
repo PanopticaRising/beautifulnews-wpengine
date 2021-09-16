@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <title>BeautifulNews by InformationIsBeautiful (Unofficial)</title>
+    <script src="node_modules/rss-parser/dist/rss-parser.min.js"></script>
+    <script>
+        window.wallpaperDuration = 1 * 1000 * 60; // Default 1 minutes.
+        window.beautifulNews = [];
+        window.random = true;
+        window.counter = 0;
+        window.wallpaperPropertyListener = {
+            applyUserProperties: function (properties) {
+                console.log(properties);
+                if (properties.duration) {
+                    window.wallpaperDuration = properties.duration * 1000 * 60;
+                }
+                if (properties.backgroundcolor) {
+                    var customColor = properties.backgroundcolor.value.split(' ');
+                    customColor = customColor.map(function (c) {
+                        return Math.ceil(c * 255);
+                    });
+                    var customColorAsCSS = 'rgb(' + customColor + ')';
+                    console.log('Setting background color to', customColorAsCSS);
+                    document.body.style.backgroundColor = customColorAsCSS;
+                }
+                if (properties.random) {
+                    window.random = properties.random;
+                }
+            },
+        };
+    </script>
+    <style>
+        body {
+            background-color: black;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #img {
+            max-width: 98vw;
+            max-height: 98vh;
+            margin: 0 auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <img id='img' />
+    <script>
+        // TODO: Remove if InformationIsBeautiful allows CORS access to the feed.
+        const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
+
+        let parser = new RSSParser();
+        parser.parseURL(CORS_PROXY + 'https://feeds.feedburner.com/beautifulnewsdaily', function (err, feed) {
+            if (err) {
+                console.error(err);
+                throw err;
+            }
+
+            window.beautifulNews = feed.items.map(function (entry) {
+                const arr = entry.link.split('/');
+                const imgStr = arr[arr.length - 1];
+                const numMatch = imgStr.match(/^(\d+)/);
+                const num = numMatch[1];
+
+                return `https://s3.amazonaws.com/infobeautiful-bnews/images/${num}/${imgStr}.svg`;
+            })
+
+            const nextImg = () => {
+                console.log('Called nextImg');
+                let next = ++window.counter % window.beautifulNews.length;
+
+                if (window.random) {
+                    next = Math.floor(Math.random() * window.beautifulNews.length);
+                }
+
+                document.getElementById('img').src = window.beautifulNews[next];
+
+                setTimeout(() => {
+                    nextImg();
+                }, window.wallpaperDuration);
+            }
+
+            nextImg();
+        })
+    </script>
+</body>
